@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { ChevronDown, Plus } from 'lucide-react'
+import { ChevronDown, Plus, CalendarIcon, Search } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
@@ -21,22 +21,56 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 
 export default function MillenniumDashboard() {
-  const [activeLeadTab, setActiveLeadTab] = useState("overview")
+  const [activeLeadTab, setActiveLeadTab] = useState("intent")
   const [activeCampaignTab, setActiveCampaignTab] = useState("overview")
+  const [showAdditionalFilters, setShowAdditionalFilters] = useState(false)
+  const [expandedAgencies, setExpandedAgencies] = useState<string[]>(["Premier Insurance Group", "Elite Coverage Solutions"])
+  const [campaignFilters, setCampaignFilters] = useState({
+    campaignType: [] as string[],
+    touchpoints: [] as string[],
+    audienceSegment: [] as string[],
+    sourcePlatform: [] as string[],
+    status: [] as string[]
+  })
+  const [showCampaignFilters, setShowCampaignFilters] = useState(false)
+
+  const toggleAgencyExpansion = (agencyName: string) => {
+    setExpandedAgencies(prev => 
+      prev.includes(agencyName) 
+        ? prev.filter(name => name !== agencyName)
+        : [...prev, agencyName]
+    )
+  }
+
+  const handleCampaignFilterChange = (category: keyof typeof campaignFilters, value: string) => {
+    setCampaignFilters(prev => ({
+      ...prev,
+      [category]: prev[category].includes(value)
+        ? prev[category].filter(item => item !== value)
+        : [...prev[category], value]
+    }))
+  }
 
   const topMetrics = [
-    { label: "BOOKED APPOINTMENTS", value: "247", trend: "up", color: "green" },
-    { label: "WAITING ACCEPTANCE", value: "58", trend: "down", color: "red" },
-    { label: "ACCEPTED APPOINTMENTS", value: "189", trend: "up", color: "green" },
+    { label: "BOOKED APPOINTMENTS", value: "247", trend: "up", color: "#74D1A6", percentage: "+12%" },
+    { label: "AWAITING ACCEPTANCE", value: "58", trend: "down", color: "#F87171", percentage: "-15%" },
+    { label: "ACCEPTED APPOINTMENTS", value: "189", trend: "up", color: "#74D1A6", percentage: "+8%" },
   ]
 
   const bottomMetrics = [
-    { label: "PROSPECTS", value: "634", trend: "up", color: "red" },
-    { label: "CLOSED WON", value: "287", trend: "up", color: "red" },
-    { label: "CLOSED LOST", value: "287", trend: "up", color: "red" },
-    { label: "OPPORTUNITIES", value: "287", trend: "up", color: "red" },
+    { label: "IN PROGRESS", value: "634", trend: "down", color: "#F87171", percentage: "-3%" },
+    { label: "CLOSED WON", value: "287", trend: "down", color: "#F87171", percentage: "-3%" },
+    { label: "CLOSED LOST", value: "287", trend: "down", color: "#F87171", percentage: "-3%" },
+    { label: "INACTIVE/ARCHIVED", value: "287", trend: "down", color: "#F87171", percentage: "-3%" },
   ]
 
   const overviewSegments = [
@@ -48,11 +82,11 @@ export default function MillenniumDashboard() {
 
   const demographicsSegments = [
     { name: "Customer Campaign Plan Details", percentage: 65, color: "bg-blue-500", priority: "High Priority" },
-    { name: "High Premiums", percentage: 45, color: "bg-red-400", priority: "High Priority" },
-    { name: "Out of Network Bills", percentage: 55, color: "bg-red-500", priority: "High Priority" },
+    { name: "High Premiums", percentage: 45, color: "bg-[#FA9999]", priority: "High Priority" },
+    { name: "Out of Network Bills", percentage: 55, color: "bg-[#F87171]", priority: "High Priority" },
     { name: "Complex Plan Options", percentage: 35, color: "bg-blue-400", priority: "Medium Priority" },
     { name: "Limited Provider Network", percentage: 25, color: "bg-blue-300", priority: "Medium Priority" },
-    { name: "Prior Authorization Issues", percentage: 18, color: "bg-green-400", priority: "Low Priority" },
+    { name: "Prior Authorization Issues", percentage: 18, color: "bg-[#8DD9B8]", priority: "Low Priority" },
   ]
 
   const topStates = [
@@ -172,21 +206,284 @@ export default function MillenniumDashboard() {
               </SelectContent>
             </Select>
 
-            <Select defaultValue="all-campaigns">
-              <SelectTrigger className="w-40">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all-campaigns">All Campaigns</SelectItem>
-                <SelectItem value="active-campaigns">Active Campaigns</SelectItem>
-                <SelectItem value="paused-campaigns">Paused Campaigns</SelectItem>
-              </SelectContent>
-            </Select>
+            <Popover open={showCampaignFilters} onOpenChange={setShowCampaignFilters}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="w-40 justify-between">
+                  All Campaigns
+                  <ChevronDown className="w-4 h-4" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80 p-4" align="start">
+                <div className="space-y-4">
+                  {/* Header */}
+                  <div className="flex items-center justify-between border-b pb-2">
+                    <span className="font-medium">All Campaigns</span>
+                    <Button variant="ghost" size="sm" className="text-xs">
+                      Advanced
+                    </Button>
+                  </div>
 
-            <Button variant="outline" size="sm">
-              <Plus className="w-4 h-4 mr-2" />
-              Add Filter
-            </Button>
+                  {/* Scrollable Content */}
+                  <div className="max-h-80 overflow-y-auto space-y-4">
+                    {/* Campaign Type */}
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Campaign Type</Label>
+                      <div className="space-y-2">
+                        {['Email', 'Direct-Mail', 'Ads', 'Provider Outreach'].map((type) => (
+                          <div key={type} className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              id={`campaign-${type}`}
+                              checked={campaignFilters.campaignType.includes(type)}
+                              onChange={() => handleCampaignFilterChange('campaignType', type)}
+                              className="rounded border-gray-300"
+                            />
+                            <Label htmlFor={`campaign-${type}`} className="text-sm font-normal">
+                              {type}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Touchpoints */}
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Touchpoints</Label>
+                      <div className="space-y-2">
+                        {['≤ 4 Touches', '5-7 Touches', 'Custom Range'].map((touchpoint) => (
+                          <div key={touchpoint} className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              id={`touchpoint-${touchpoint}`}
+                              checked={campaignFilters.touchpoints.includes(touchpoint)}
+                              onChange={() => handleCampaignFilterChange('touchpoints', touchpoint)}
+                              className="rounded border-gray-300"
+                            />
+                            <Label htmlFor={`touchpoint-${touchpoint}`} className="text-sm font-normal">
+                              {touchpoint}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Audience Segment */}
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Audience Segment</Label>
+                      <div className="space-y-2">
+                        {['65-74', 'Dual-Eligible', 'New Retirees', 'High Income'].map((segment) => (
+                          <div key={segment} className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              id={`segment-${segment}`}
+                              checked={campaignFilters.audienceSegment.includes(segment)}
+                              onChange={() => handleCampaignFilterChange('audienceSegment', segment)}
+                              className="rounded border-gray-300"
+                            />
+                            <Label htmlFor={`segment-${segment}`} className="text-sm font-normal">
+                              {segment}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Source Platform */}
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Source Platform</Label>
+                      <div className="space-y-2">
+                        {['Meta Ads', 'Google Search', 'YouTube', 'Postalytics'].map((platform) => (
+                          <div key={platform} className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              id={`platform-${platform}`}
+                              checked={campaignFilters.sourcePlatform.includes(platform)}
+                              onChange={() => handleCampaignFilterChange('sourcePlatform', platform)}
+                              className="rounded border-gray-300"
+                            />
+                            <Label htmlFor={`platform-${platform}`} className="text-sm font-normal">
+                              {platform}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Status */}
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Status</Label>
+                      <div className="space-y-2">
+                        {['Active', 'Scheduled', 'Paused', 'Completed'].map((status) => (
+                          <div key={status} className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              id={`status-${status}`}
+                              checked={campaignFilters.status.includes(status)}
+                              onChange={() => handleCampaignFilterChange('status', status)}
+                              className="rounded border-gray-300"
+                            />
+                            <Label htmlFor={`status-${status}`} className="text-sm font-normal">
+                              {status}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-2 pt-4 border-t">
+                    <Button
+                      className="flex-1"
+                      onClick={() => setShowCampaignFilters(false)}
+                    >
+                      Apply Filters
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => {
+                        setCampaignFilters({
+                          campaignType: [],
+                          touchpoints: [],
+                          audienceSegment: [],
+                          sourcePlatform: [],
+                          status: []
+                        })
+                      }}
+                    >
+                      Clear All
+                    </Button>
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+
+            <Popover open={showAdditionalFilters} onOpenChange={setShowAdditionalFilters}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Filter
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80 p-4" align="start">
+                <div className="space-y-4">
+                  <h4 className="font-medium text-sm border-b pb-2">Additional Filters</h4>
+
+                  {/* Scrollable Content */}
+                  <div className="max-h-80 overflow-y-auto space-y-4">
+                    {/* Lead Created Date */}
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Lead Created Date</Label>
+                      <div className="flex gap-2">
+                        <div className="relative flex-1">
+                          <Input
+                            type="text"
+                            placeholder="mm/dd/yyyy"
+                            className="pr-8"
+                          />
+                          <CalendarIcon className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        </div>
+                        <div className="relative flex-1">
+                          <Input
+                            type="text"
+                            placeholder="mm/dd/yyyy"
+                            className="pr-8"
+                          />
+                          <CalendarIcon className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Lead Status */}
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Lead Status</Label>
+                      <Select>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="new">New</SelectItem>
+                          <SelectItem value="contacted">Contacted</SelectItem>
+                          <SelectItem value="qualified">Qualified</SelectItem>
+                          <SelectItem value="closed">Closed</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Email */}
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Email</Label>
+                      <div className="relative">
+                        <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Input
+                          type="text"
+                          placeholder="Search by email..."
+                          className="pl-8"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Phone */}
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Phone</Label>
+                      <div className="relative">
+                        <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Input
+                          type="text"
+                          placeholder="Search by phone..."
+                          className="pl-8"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Age Range */}
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Age Range</Label>
+                      <Select>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select age range" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="18-25">18-25</SelectItem>
+                          <SelectItem value="26-35">26-35</SelectItem>
+                          <SelectItem value="36-45">36-45</SelectItem>
+                          <SelectItem value="46-55">46-55</SelectItem>
+                          <SelectItem value="56-65">56-65</SelectItem>
+                          <SelectItem value="65+">65+</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Location */}
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Location</Label>
+                      <Input
+                        type="text"
+                        placeholder="City, State, or ZIP"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-2 pt-4 border-t">
+                    <Button
+                      className="flex-1"
+                      onClick={() => setShowAdditionalFilters(false)}
+                    >
+                      Apply Filters
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => setShowAdditionalFilters(false)}
+                    >
+                      Clear All
+                    </Button>
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
         </div>
       </div>
@@ -197,12 +494,15 @@ export default function MillenniumDashboard() {
           {topMetrics.map((metric, index) => (
             <Card key={index}>
               <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600 mb-1">{metric.label}</p>
-                    <p className="text-3xl font-bold">{metric.value}</p>
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-sm font-medium text-gray-600">{metric.label}</p>
+                  <div className={`w-3 h-3 rounded-full ${metric.color === '#74D1A6' ? 'bg-[#74D1A6]' : 'bg-[#F87171]'}`} />
+                </div>
+                <div className="flex items-end justify-between">
+                  <p className="text-3xl font-bold">{metric.value}</p>
+                  <div className={`text-sm font-medium ${metric.color === '#74D1A6' ? 'text-[#5BB88A]' : 'text-[#E85555]'}`}>
+                    {metric.percentage}
                   </div>
-                  <div className={`w-3 h-3 rounded-full ${metric.color === 'green' ? 'bg-green-500' : 'bg-red-500'}`} />
                 </div>
               </CardContent>
             </Card>
@@ -214,12 +514,15 @@ export default function MillenniumDashboard() {
           {bottomMetrics.map((metric, index) => (
             <Card key={index}>
               <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600 mb-1">{metric.label}</p>
-                    <p className="text-3xl font-bold">{metric.value}</p>
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-sm font-medium text-gray-600">{metric.label}</p>
+                  <div className="w-3 h-3 rounded-full bg-[#F87171]" />
+                </div>
+                <div className="flex items-end justify-between">
+                  <p className="text-3xl font-bold">{metric.value}</p>
+                  <div className="text-sm font-medium text-[#E85555]">
+                    {metric.percentage}
                   </div>
-                  <div className="w-3 h-3 rounded-full bg-red-500" />
                 </div>
               </CardContent>
             </Card>
@@ -229,302 +532,723 @@ export default function MillenniumDashboard() {
         {/* Funnel Chart */}
         <Card>
           <CardHeader>
-            <CardTitle>Funnel from Booked to Sold</CardTitle>
+            <CardTitle>Funnel: from Booked to Sold</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
-              {/* Funnel Visualization */}
-              <div className="relative">
-                <div className="flex items-center justify-center space-x-1">
-                  {/* Booked */}
-                  <div className="relative">
-                    <div 
-                      className="bg-blue-500 text-white font-semibold flex items-center justify-center text-sm"
-                      style={{ 
-                        width: '200px', 
-                        height: '48px',
-                        clipPath: 'polygon(0 0, 85% 0, 100% 100%, 0 100%)',
-                        borderRadius: '4px 0 0 4px'
-                      }}
-                    >
-                      1,200
-                    </div>
+              {/* Vertical Funnel Bars */}
+              <div className="flex items-end justify-center gap-8 h-80">
+                {/* Booked */}
+                <div className="flex flex-col items-center">
+                  <div
+                    className="bg-blue-600 text-white font-semibold flex flex-col items-center justify-end px-6 py-4 rounded-t-lg relative"
+                    style={{ height: '240px', width: '120px' }}
+                  >
+                    <span className="text-lg font-bold mb-2">1,200</span>
                   </div>
-                  
-                  {/* Qualified */}
-                  <div className="relative -ml-4">
-                    <div 
-                      className="bg-blue-400 text-white font-semibold flex items-center justify-center text-sm"
-                      style={{ 
-                        width: '180px', 
-                        height: '48px',
-                        clipPath: 'polygon(15% 0, 85% 0, 100% 100%, 0 100%)'
-                      }}
-                    >
-                      1,050
-                    </div>
-                  </div>
-                  
-                  {/* Proposal */}
-                  <div className="relative -ml-4">
-                    <div 
-                      className="bg-gray-500 text-white font-semibold flex items-center justify-center text-sm"
-                      style={{ 
-                        width: '160px', 
-                        height: '48px',
-                        clipPath: 'polygon(15% 0, 85% 0, 100% 100%, 0 100%)'
-                      }}
-                    >
-                      780
-                    </div>
-                  </div>
-                  
-                  {/* Sold */}
-                  <div className="relative -ml-4">
-                    <div 
-                      className="bg-green-500 text-white font-semibold flex items-center justify-center text-sm"
-                      style={{ 
-                        width: '140px', 
-                        height: '48px',
-                        clipPath: 'polygon(15% 0, 100% 0, 100% 100%, 0 100%)',
-                        borderRadius: '0 4px 4px 0'
-                      }}
-                    >
-                      510
-                    </div>
+                  <div className="text-sm font-medium text-gray-700 mt-2 text-center">
+                    Booked
                   </div>
                 </div>
-                
-                {/* Stage Labels */}
-                <div className="flex justify-between mt-4 px-2">
-                  <div className="text-center" style={{ width: '200px' }}>
-                    <span className="text-sm font-medium text-gray-700">Booked</span>
+
+                {/* Assigned */}
+                <div className="flex flex-col items-center">
+                  <div
+                    className="bg-blue-400 text-white font-semibold flex flex-col items-center justify-end px-6 py-4 rounded-t-lg"
+                    style={{ height: '210px', width: '120px' }}
+                  >
+                    <span className="text-lg font-bold mb-2">1,050</span>
                   </div>
-                  <div className="text-center" style={{ width: '180px', marginLeft: '-16px' }}>
-                    <span className="text-sm font-medium text-gray-700">Qualified</span>
+                  <div className="text-sm font-medium text-gray-700 mt-2 text-center">
+                    Assigned
                   </div>
-                  <div className="text-center" style={{ width: '160px', marginLeft: '-16px' }}>
-                    <span className="text-sm font-medium text-gray-700">Proposal</span>
+                </div>
+
+                {/* Accepted */}
+                <div className="flex flex-col items-center">
+                  <div
+                    className="bg-gray-500 text-white font-semibold flex flex-col items-center justify-end px-6 py-4 rounded-t-lg"
+                    style={{ height: '156px', width: '120px' }}
+                  >
+                    <span className="text-lg font-bold mb-2">780</span>
                   </div>
-                  <div className="text-center" style={{ width: '140px', marginLeft: '-16px' }}>
-                    <span className="text-sm font-medium text-gray-700">Sold</span>
+                  <div className="text-sm font-medium text-gray-700 mt-2 text-center">
+                    Accepted
+                  </div>
+                </div>
+
+                {/* Sold */}
+                <div className="flex flex-col items-center">
+                  <div
+                    className="bg-[#74D1A6] text-white font-semibold flex flex-col items-center justify-end px-6 py-4 rounded-t-lg"
+                    style={{ height: '102px', width: '120px' }}
+                  >
+                    <span className="text-lg font-bold mb-2">510</span>
+                  </div>
+                  <div className="text-sm font-medium text-gray-700 mt-2 text-center">
+                    Sold
                   </div>
                 </div>
               </div>
-              
-              {/* Conversion Rates */}
-              <div className="flex justify-between text-xs text-gray-500 px-2">
-                <div style={{ width: '200px' }} className="text-center">100%</div>
-                <div style={{ width: '180px', marginLeft: '-16px' }} className="text-center">87.5%</div>
-                <div style={{ width: '160px', marginLeft: '-16px' }} className="text-center">65%</div>
-                <div style={{ width: '140px', marginLeft: '-16px' }} className="text-center">42.5%</div>
+
+              {/* Attrition Details */}
+              <div className="space-y-3 bg-[#FEF5F5] border-[#FBBFBF] rounded-lg p-4">
+                <h4 className="font-medium text-[#B91C1C] mb-3">Conversion Losses</h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center gap-2">
+                    <Badge variant="destructive" className="text-xs">▼</Badge>
+                    <span className="text-[#DC4444]">12.5% attrition from Booked to Assigned</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="destructive" className="text-xs">▼</Badge>
+                    <span className="text-[#DC4444]">25.7% attrition from Assigned to Accepted</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="destructive" className="text-xs">▼</Badge>
+                    <span className="text-[#DC4444]">34.6% attrition from Accepted to Sold</span>
+                  </div>
+                </div>
               </div>
-              
-              {/* Alerts */}
-              <div className="flex gap-2">
-                <Badge variant="destructive" className="text-xs">Alert</Badge>
-                <Badge variant="destructive" className="text-xs">Alert</Badge>
-                <Badge variant="destructive" className="text-xs">Alert</Badge>
-              </div>
-              
-              {/* Alert Message */}
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                <p className="text-sm text-red-800">
-                  ⚠️ We need to improve the funnel at the Proposal stage
-                </p>
+
+              {/* Footer Note */}
+              <div className="text-sm text-gray-600 border-t pt-4">
+                <p>Bar heights proportional to volume • Red indicators show conversion losses between stages</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Lead Segments */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Lead Segments</CardTitle>
-              <div className="flex gap-2">
-                <Button
-                  variant={activeLeadTab === "overview" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setActiveLeadTab("overview")}
-                >
-                  Overview
-                </Button>
-                <Button
-                  variant={activeLeadTab === "demographics" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setActiveLeadTab("demographics")}
-                >
-                  Demographics
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {activeLeadTab === "overview" ? (
-                  <>
-                    {overviewSegments.map((segment, index) => (
-                      <div key={index} className="space-y-2">
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm font-medium">{segment.name}</span>
-                          <span className="text-sm text-gray-600">{segment.percentage}%</span>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div
-                            className={`${segment.color} h-2 rounded-full`}
-                            style={{ width: `${segment.percentage}%` }}
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </>
-                ) : (
-                  <>
-                    <p className="text-sm text-gray-600 mb-4">
-                      Leads with a defined issue based on their profile
-                    </p>
-                    {demographicsSegments.map((segment, index) => (
-                      <div key={index} className="space-y-2">
-                        <div className="flex justify-between items-center">
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium">{segment.name}</span>
-                            <Badge
-                              variant={
-                                segment.priority === "High Priority"
-                                  ? "destructive"
-                                  : segment.priority === "Medium Priority"
-                                  ? "secondary"
-                                  : "default"
-                              }
-                              className="text-xs"
-                            >
-                              {segment.priority}
-                            </Badge>
-                          </div>
-                          <span className="text-sm text-gray-600">{segment.percentage}%</span>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div
-                            className={`${segment.color} h-2 rounded-full`}
-                            style={{ width: `${segment.percentage}%` }}
-                          />
-                        </div>
-                      </div>
-                    ))}
-                    <div className="flex gap-4 text-xs mt-4">
-                      <div className="flex items-center gap-1">
-                        <div className="w-2 h-2 bg-red-500 rounded-full" />
-                        <span>High Priority</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <div className="w-2 h-2 bg-blue-500 rounded-full" />
-                        <span>Medium Priority</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <div className="w-2 h-2 bg-green-500 rounded-full" />
-                        <span>Low Priority</span>
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Top 5 States / Most Selected Goals */}
-          <Card>
-            <CardHeader>
-              <CardTitle>
-                {activeLeadTab === "overview" ? "Top 5 States by Lead Count" : "Most Selected Survey Goals"}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {activeLeadTab === "overview" ? (
-                <div className="space-y-4">
-                  {topStates.map((state, index) => (
-                    <div key={index} className="flex justify-between items-center">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-gray-800 text-white rounded-full flex items-center justify-center text-sm font-medium">
-                          #{index + 1}
-                        </div>
-                        <span className="font-medium">{state.state}</span>
-                      </div>
-                      <span className="text-sm text-gray-600">{state.leads}</span>
-                    </div>
-                  ))}
-                  <div className="mt-6 h-32 bg-gray-100 rounded-lg flex items-center justify-center">
-                    <span className="text-gray-500">Geographic visualization would appear here</span>
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <p className="text-sm text-gray-600 mb-4">
-                    Leads with Multiple Goals (Q2-Q4 FY)
-                  </p>
-                  {mostSelectedGoals.map((goal, index) => (
-                    <div key={index} className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium">{goal.name}</span>
-                        <span className="text-sm text-gray-600">{goal.percentage}%</span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div
-                          className={`${goal.color} h-2 rounded-full`}
-                          style={{ width: `${goal.percentage}%` }}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Agencies & Agents Table */}
-        <Card>
+        {/* Lead Segments - Single Card */}
+        <Card className="col-span-full">
           <CardHeader>
-            <CardTitle>Agencies & Agents</CardTitle>
-            <p className="text-sm text-gray-600">
-              Top performing Agencies and Agents signed to ACA
-            </p>
+            <CardTitle>Lead Segments</CardTitle>
+            <div className="flex gap-2">
+              <Button
+                variant={activeLeadTab === "demographics" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setActiveLeadTab("demographics")}
+              >
+                Demographics
+              </Button>
+              <Button
+                variant={activeLeadTab === "intent" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setActiveLeadTab("intent")}
+              >
+                Intent & Pain-Points
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>AGENCY / AGENT NAME</TableHead>
-                  <TableHead>PRIORITY WEIGHT</TableHead>
-                  <TableHead>ACCEPTED TO FOLLOW-UP</TableHead>
-                  <TableHead>ACCEPTANCE RATE %</TableHead>
-                  <TableHead>CLOSED WON %</TableHead>
-                  <TableHead>CLOSED WON</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {agenciesData.map((agency, index) => (
-                  <TableRow key={index}>
-                    <TableCell className="font-medium">{agency.name}</TableCell>
-                    <TableCell>
+            {activeLeadTab === "demographics" ? (
+              <div className="space-y-8">
+                {/* Age Distribution */}
+                <div>
+                  <h4 className="font-medium mb-3">Age Distribution</h4>
+                  <div className="w-full bg-gray-200 rounded-lg h-8 flex overflow-hidden">
+                    <div className="bg-blue-600 flex items-center justify-center text-white text-sm font-medium" style={{ width: '35%' }}>
+                      35%
+                    </div>
+                    <div className="bg-blue-400 flex items-center justify-center text-white text-sm font-medium" style={{ width: '28%' }}>
+                      28%
+                    </div>
+                    <div className="bg-blue-300 flex items-center justify-center text-white text-sm font-medium" style={{ width: '22%' }}>
+                      22%
+                    </div>
+                    <div className="bg-blue-200 flex items-center justify-center text-gray-700 text-sm font-medium" style={{ width: '15%' }}>
+                      15%
+                    </div>
+                  </div>
+                </div>
+
+                {/* Income Distribution */}
+                <div>
+                  <h4 className="font-medium mb-3">Income Distribution</h4>
+                  <div className="w-full bg-gray-200 rounded-lg h-8 flex overflow-hidden">
+                    <div className="bg-blue-600 flex items-center justify-center text-white text-sm font-medium" style={{ width: '18%' }}>
+                      18%
+                    </div>
+                    <div className="bg-blue-400 flex items-center justify-center text-white text-sm font-medium" style={{ width: '32%' }}>
+                      32%
+                    </div>
+                    <div className="bg-blue-300 flex items-center justify-center text-white text-sm font-medium" style={{ width: '28%' }}>
+                      28%
+                    </div>
+                    <div className="bg-blue-200 flex items-center justify-center text-gray-700 text-sm font-medium" style={{ width: '22%' }}>
+                      22%
+                    </div>
+                  </div>
+                </div>
+
+                {/* Household Size */}
+                <div>
+                  <h4 className="font-medium mb-3">Household Size</h4>
+                  <div className="w-full bg-gray-200 rounded-lg h-8 flex overflow-hidden">
+                    <div className="bg-blue-600 flex items-center justify-center text-white text-sm font-medium" style={{ width: '24%' }}>
+                      24%
+                    </div>
+                    <div className="bg-blue-400 flex items-center justify-center text-white text-sm font-medium" style={{ width: '38%' }}>
+                      38%
+                    </div>
+                    <div className="bg-blue-300 flex items-center justify-center text-white text-sm font-medium" style={{ width: '22%' }}>
+                      22%
+                    </div>
+                    <div className="bg-blue-200 flex items-center justify-center text-gray-700 text-sm font-medium" style={{ width: '16%' }}>
+                      16%
+                    </div>
+                  </div>
+                </div>
+
+                {/* Geographic Section */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  <div>
+                    <h4 className="font-medium mb-3">Top Counties: Florida</h4>
+                    <div className="h-48 bg-gray-100 rounded-lg flex items-center justify-center mb-4">
+                      <span className="text-gray-500">Florida counties map visualization</span>
+                    </div>
+                    <div className="flex items-center gap-4 text-sm">
+                      <span>Lead Concentration:</span>
                       <div className="flex items-center gap-2">
-                        <div className={`w-2 h-2 rounded-full ${agency.status === 'Active' ? 'bg-green-500' : 'bg-red-500'}`} />
-                        {agency.priority}
+                        <span>Low</span>
+                        <div className="w-16 h-2 bg-gradient-to-r from-blue-200 to-blue-600 rounded"></div>
+                        <span>High</span>
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="secondary">Yes</Badge>
-                    </TableCell>
-                    <TableCell>{agency.acceptanceRate}</TableCell>
-                    <TableCell>
-                      <Badge variant="secondary">Yes</Badge>
-                    </TableCell>
-                    <TableCell>{agency.closedWon}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="font-medium mb-3">Top 5 Counties by Lead Count</h4>
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center gap-3">
+                          <span className="font-bold text-lg">#1</span>
+                          <span className="font-medium">Sarasota</span>
+                        </div>
+                        <span className="text-sm text-gray-600">156 leads (12.5%)</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center gap-3">
+                          <span className="font-bold text-lg">#2</span>
+                          <span className="font-medium">Miami</span>
+                        </div>
+                        <span className="text-sm text-gray-600">134 leads (10.7%)</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center gap-3">
+                          <span className="font-bold text-lg">#3</span>
+                          <span className="font-medium">FL</span>
+                        </div>
+                        <span className="text-sm text-gray-600">98 leads (7.9%)</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center gap-3">
+                          <span className="font-bold text-lg">#4</span>
+                          <span className="font-medium">NY</span>
+                        </div>
+                        <span className="text-sm text-gray-600">87 leads (7%)</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center gap-3">
+                          <span className="font-bold text-lg">#5</span>
+                          <span className="font-medium">PA</span>
+                        </div>
+                        <span className="text-sm text-gray-600">76 leads (6.1%)</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="text-sm text-gray-600 border-t pt-4">
+                  <p>Segment widths proportional to share of booked leads</p>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-8">
+                {/* Common Coverage Pain Points */}
+                <div>
+                  <div className="flex justify-between items-center mb-4">
+                    <h4 className="font-medium">Common Coverage Pain Points</h4>
+                    <span className="text-sm text-gray-600">Click bars to filter leads table</span>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <div className="flex justify-between items-center mb-2">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">High Premiums</span>
+                          <Badge variant="destructive" className="text-xs">high</Badge>
+                        </div>
+                        <span className="text-sm font-medium">43.5%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-lg h-6 relative overflow-hidden">
+                        <div className="bg-[#FA9999] h-full rounded-lg flex items-center px-3" style={{ width: '43.5%' }}>
+                          <span className="text-white text-sm font-medium">542 leads</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="flex justify-between items-center mb-2">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">Out-of-Network Bills</span>
+                          <Badge variant="destructive" className="text-xs">high</Badge>
+                        </div>
+                        <span className="text-sm font-medium">31.9%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-lg h-6 relative overflow-hidden">
+                        <div className="bg-[#FA9999] h-full rounded-lg flex items-center px-3" style={{ width: '31.9%' }}>
+                          <span className="text-white text-sm font-medium">398 leads</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="flex justify-between items-center mb-2">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">Complex Plan Options</span>
+                          <Badge variant="secondary" className="text-xs">medium</Badge>
+                        </div>
+                        <span className="text-sm font-medium">26.8%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-lg h-6 relative overflow-hidden">
+                        <div className="bg-blue-400 h-full rounded-lg flex items-center px-3" style={{ width: '26.8%' }}>
+                          <span className="text-white text-sm font-medium">334 leads</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="flex justify-between items-center mb-2">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">Limited Provider Network</span>
+                          <Badge variant="secondary" className="text-xs">medium</Badge>
+                        </div>
+                        <span className="text-sm font-medium">23%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-lg h-6 relative overflow-hidden">
+                        <div className="bg-blue-400 h-full rounded-lg flex items-center px-3" style={{ width: '23%' }}>
+                          <span className="text-white text-sm font-medium">287 leads</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="flex justify-between items-center mb-2">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">Prior Authorization Issues</span>
+                          <Badge variant="outline" className="text-xs">low</Badge>
+                        </div>
+                        <span className="text-sm font-medium">15.9%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-lg h-6 relative overflow-hidden">
+                        <div className="bg-[#8DD9B8] h-full rounded-lg flex items-center px-3" style={{ width: '15.9%' }}>
+                          <span className="text-white text-sm font-medium">198 leads</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-4 text-xs mt-4">
+                    <div className="flex items-center gap-1">
+                      <div className="w-2 h-2 bg-[#FA9999] rounded-full" />
+                      <span>High Priority</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <div className="w-2 h-2 bg-blue-400 rounded-full" />
+                      <span>Medium Priority</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <div className="w-2 h-2 bg-[#8DD9B8] rounded-full" />
+                      <span>Low Priority</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Most Selected Survey Goals */}
+                <div>
+                  <h4 className="font-medium mb-4">Most Selected Survey Goals</h4>
+
+                  <div className="space-y-4">
+                    <div>
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="font-medium">Save Money</span>
+                        <span className="text-sm font-medium">39.1%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-lg h-6 relative overflow-hidden">
+                        <div className="bg-blue-600 h-full rounded-lg flex items-center px-3" style={{ width: '39.1%' }}>
+                          <span className="text-white text-sm font-medium">487 leads</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="font-medium">Keep Doctor</span>
+                        <span className="text-sm font-medium">33.9%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-lg h-6 relative overflow-hidden">
+                        <div className="bg-blue-600 h-full rounded-lg flex items-center px-3" style={{ width: '33.9%' }}>
+                          <span className="text-white text-sm font-medium">423 leads</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="font-medium">Dental & Vision</span>
+                        <span className="text-sm font-medium">28.6%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-lg h-6 relative overflow-hidden">
+                        <div className="bg-blue-600 h-full rounded-lg flex items-center px-3" style={{ width: '28.6%' }}>
+                          <span className="text-white text-sm font-medium">356 leads</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="font-medium">Rx Coverage</span>
+                        <span className="text-sm font-medium">23.9%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-lg h-6 relative overflow-hidden">
+                        <div className="bg-blue-600 h-full rounded-lg flex items-center px-3" style={{ width: '23.9%' }}>
+                          <span className="text-white text-sm font-medium">298 leads</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="font-medium">Low Deductible</span>
+                        <span className="text-sm font-medium">21.4%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-lg h-6 relative overflow-hidden">
+                        <div className="bg-blue-600 h-full rounded-lg flex items-center px-3" style={{ width: '21.4%' }}>
+                          <span className="text-white text-sm font-medium">267 leads</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="text-sm text-gray-700 mt-6 pt-4 border-t">
+                    <p><strong>Leads with Multiple Goals:</strong> 623 (49.9%)</p>
+                  </div>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
+
+        {/* Agencies & Agents Table */}
+<Card>
+  <CardHeader>
+    <CardTitle>Agencies & Agents</CardTitle>
+    <p className="text-sm text-gray-600">
+      Sort any column • Red values signal SLA risk.
+    </p>
+  </CardHeader>
+  <CardContent>
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>AGENCY / AGENT NAME</TableHead>
+          <TableHead>WEEKLY REPORT</TableHead>
+          <TableHead>AVG DAYS TO 1ST FOLLOW-UP</TableHead>
+          <TableHead>ACCEPTANCE RATE %</TableHead>
+          <TableHead>CLOSED-WON % ↓</TableHead>
+          <TableHead>CLOSED WON</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {/* Premier Insurance Group */}
+        <TableRow
+          className="border-b-0 cursor-pointer hover:bg-gray-50"
+          onClick={() => toggleAgencyExpansion("Premier Insurance Group")}
+        >
+          <TableCell className="font-medium">
+            <div className="flex items-center gap-2">
+              <ChevronDown
+                className={`w-4 h-4 transition-transform ${
+                  expandedAgencies.includes("Premier Insurance Group") ? "" : "rotate-[-90deg]"
+                }`}
+              />
+              <span>Premier Insurance Group</span>
+            </div>
+          </TableCell>
+          <TableCell>
+            <div className="flex items-center gap-1 text-[#5BB88A]">
+              <div className="w-3 h-3 rounded-full bg-[#74D1A6]" />
+              <span className="text-sm">On-time</span>
+            </div>
+          </TableCell>
+          <TableCell>3</TableCell>
+          <TableCell>
+            <span className="text-[#5BB88A] font-medium">92%</span>
+          </TableCell>
+          <TableCell>34.2%</TableCell>
+          <TableCell>87</TableCell>
+        </TableRow>
+
+        {/* Premier Insurance Group Agents - Conditionally Rendered */}
+        {expandedAgencies.includes("Premier Insurance Group") && (
+          <>
+            <TableRow className="bg-gray-50 border-b-0">
+              <TableCell className="pl-8 text-gray-700">Sarah Johnson</TableCell>
+              <TableCell>
+                <div className="flex items-center gap-1 text-[#5BB88A]">
+                  <div className="w-3 h-3 rounded-full bg-[#74D1A6]" />
+                  <span className="text-sm">On-time</span>
+                </div>
+              </TableCell>
+              <TableCell>2</TableCell>
+              <TableCell>
+                <span className="text-[#5BB88A] font-medium">96%</span>
+              </TableCell>
+              <TableCell>41.8%</TableCell>
+              <TableCell>23</TableCell>
+            </TableRow>
+
+            <TableRow className="bg-gray-50 border-b-0">
+              <TableCell className="pl-8 text-gray-700">Mike Chen</TableCell>
+              <TableCell>
+                <div className="flex items-center gap-1 text-[#E85555]">
+                  <span className="text-[#F87171] text-lg">✗</span>
+                  <span className="text-sm">Missing</span>
+                </div>
+              </TableCell>
+              <TableCell>
+                <span className="bg-[#FEE5E5] text-[#DC4444] px-2 py-1 rounded text-sm font-medium">9</span>
+              </TableCell>
+              <TableCell>
+                <span className="text-[#E85555] font-medium">68%</span>
+              </TableCell>
+              <TableCell>28.5%</TableCell>
+              <TableCell>11</TableCell>
+            </TableRow>
+
+            <TableRow className="bg-gray-50">
+              <TableCell className="pl-8 text-gray-700">Lisa Rodriguez</TableCell>
+              <TableCell>
+                <div className="flex items-center gap-1 text-[#5BB88A]">
+                  <div className="w-3 h-3 rounded-full bg-[#74D1A6]" />
+                  <span className="text-sm">On-time</span>
+                </div>
+              </TableCell>
+              <TableCell>4</TableCell>
+              <TableCell>
+                <span className="text-orange-600 font-medium">88%</span>
+              </TableCell>
+              <TableCell>32.1%</TableCell>
+              <TableCell>53</TableCell>
+            </TableRow>
+          </>
+        )}
+
+        {/* Elite Coverage Solutions */}
+        <TableRow
+          className="border-b-0 cursor-pointer hover:bg-gray-50"
+          onClick={() => toggleAgencyExpansion("Elite Coverage Solutions")}
+        >
+          <TableCell className="font-medium">
+            <div className="flex items-center gap-2">
+              <ChevronDown
+                className={`w-4 h-4 transition-transform ${
+                  expandedAgencies.includes("Elite Coverage Solutions") ? "" : "rotate-[-90deg]"
+                }`}
+              />
+              <span>Elite Coverage Solutions</span>
+            </div>
+          </TableCell>
+          <TableCell>
+            <div className="flex items-center gap-1 text-[#E85555]">
+              <span className="text-[#F87171] text-lg">✗</span>
+              <span className="text-sm">Missing</span>
+            </div>
+          </TableCell>
+          <TableCell>
+            <span className="bg-[#FEE5E5] text-[#DC4444] px-2 py-1 rounded text-sm font-medium">8</span>
+          </TableCell>
+          <TableCell>
+            <span className="text-orange-600 font-medium">74%</span>
+          </TableCell>
+          <TableCell>28.7%</TableCell>
+          <TableCell>64</TableCell>
+        </TableRow>
+
+        {/* Elite Coverage Solutions Agents - Conditionally Rendered */}
+        {expandedAgencies.includes("Elite Coverage Solutions") && (
+          <>
+            <TableRow className="bg-gray-50 border-b-0">
+              <TableCell className="pl-8 text-gray-700">David Park</TableCell>
+              <TableCell>
+                <div className="flex items-center gap-1 text-[#5BB88A]">
+                  <div className="w-3 h-3 rounded-full bg-[#74D1A6]" />
+                  <span className="text-sm">On-time</span>
+                </div>
+              </TableCell>
+              <TableCell>5</TableCell>
+              <TableCell>
+                <span className="text-orange-600 font-medium">82%</span>
+              </TableCell>
+              <TableCell>31.4%</TableCell>
+              <TableCell>28</TableCell>
+            </TableRow>
+
+            <TableRow className="bg-gray-50">
+              <TableCell className="pl-8 text-gray-700">Jennifer Walsh</TableCell>
+              <TableCell>
+                <div className="flex items-center gap-1 text-[#E85555]">
+                  <span className="text-[#F87171] text-lg">✗</span>
+                  <span className="text-sm">Missing</span>
+                </div>
+              </TableCell>
+              <TableCell>
+                <span className="bg-[#FEE5E5] text-[#DC4444] px-2 py-1 rounded text-sm font-medium">11</span>
+              </TableCell>
+              <TableCell>
+                <span className="text-[#E85555] font-medium">66%</span>
+              </TableCell>
+              <TableCell>26.0%</TableCell>
+              <TableCell>36</TableCell>
+            </TableRow>
+          </>
+        )}
+
+        {/* Secure Benefits Network - Collapsed */}
+        <TableRow
+          className="cursor-pointer hover:bg-gray-50"
+          onClick={() => toggleAgencyExpansion("Secure Benefits Network")}
+        >
+          <TableCell className="font-medium">
+            <div className="flex items-center gap-2">
+              <ChevronDown
+                className={`w-4 h-4 transition-transform ${
+                  expandedAgencies.includes("Secure Benefits Network") ? "" : "rotate-[-90deg]"
+                }`}
+              />
+              <span>Secure Benefits Network</span>
+            </div>
+          </TableCell>
+          <TableCell>
+            <div className="flex items-center gap-1 text-[#5BB88A]">
+              <div className="w-3 h-3 rounded-full bg-[#74D1A6]" />
+              <span className="text-sm">On-time</span>
+            </div>
+          </TableCell>
+          <TableCell>6</TableCell>
+          <TableCell>
+            <span className="text-[#5BB88A] font-medium">95%</span>
+          </TableCell>
+          <TableCell>39.1%</TableCell>
+          <TableCell>72</TableCell>
+        </TableRow>
+
+        {/* Secure Benefits Network Agents - Conditionally Rendered */}
+        {expandedAgencies.includes("Secure Benefits Network") && (
+          <>
+            <TableRow className="bg-gray-50 border-b-0">
+              <TableCell className="pl-8 text-gray-700">Michael Thompson</TableCell>
+              <TableCell>
+                <div className="flex items-center gap-1 text-[#5BB88A]">
+                  <div className="w-3 h-3 rounded-full bg-[#74D1A6]" />
+                  <span className="text-sm">On-time</span>
+                </div>
+              </TableCell>
+              <TableCell>4</TableCell>
+              <TableCell>
+                <span className="text-[#5BB88A] font-medium">98%</span>
+              </TableCell>
+              <TableCell>42.3%</TableCell>
+              <TableCell>45</TableCell>
+            </TableRow>
+
+            <TableRow className="bg-gray-50">
+              <TableCell className="pl-8 text-gray-700">Amanda Davis</TableCell>
+              <TableCell>
+                <div className="flex items-center gap-1 text-[#5BB88A]">
+                  <div className="w-3 h-3 rounded-full bg-[#74D1A6]" />
+                  <span className="text-sm">On-time</span>
+                </div>
+              </TableCell>
+              <TableCell>7</TableCell>
+              <TableCell>
+                <span className="text-[#5BB88A] font-medium">92%</span>
+              </TableCell>
+              <TableCell>35.8%</TableCell>
+              <TableCell>27</TableCell>
+            </TableRow>
+          </>
+        )}
+
+        {/* Guardian Health Partners - Collapsed */}
+        <TableRow
+          className="cursor-pointer hover:bg-gray-50"
+          onClick={() => toggleAgencyExpansion("Guardian Health Partners")}
+        >
+          <TableCell className="font-medium">
+            <div className="flex items-center gap-2">
+              <ChevronDown
+                className={`w-4 h-4 transition-transform ${
+                  expandedAgencies.includes("Guardian Health Partners") ? "" : "rotate-[-90deg]"
+                }`}
+              />
+              <span>Guardian Health Partners</span>
+            </div>
+          </TableCell>
+          <TableCell>
+            <div className="flex items-center gap-1 text-[#5BB88A]">
+              <div className="w-3 h-3 rounded-full bg-[#74D1A6]" />
+              <span className="text-sm">On-time</span>
+            </div>
+          </TableCell>
+          <TableCell>5</TableCell>
+          <TableCell>
+            <span className="text-orange-600 font-medium">87%</span>
+          </TableCell>
+          <TableCell>31.6%</TableCell>
+          <TableCell>58</TableCell>
+        </TableRow>
+
+        {/* Guardian Health Partners Agents - Conditionally Rendered */}
+        {expandedAgencies.includes("Guardian Health Partners") && (
+          <>
+            <TableRow className="bg-gray-50 border-b-0">
+              <TableCell className="pl-8 text-gray-700">Robert Wilson</TableCell>
+              <TableCell>
+                <div className="flex items-center gap-1 text-[#5BB88A]">
+                  <div className="w-3 h-3 rounded-full bg-[#74D1A6]" />
+                  <span className="text-sm">On-time</span>
+                </div>
+              </TableCell>
+              <TableCell>3</TableCell>
+              <TableCell>
+                <span className="text-[#5BB88A] font-medium">91%</span>
+              </TableCell>
+              <TableCell>33.2%</TableCell>
+              <TableCell>32</TableCell>
+            </TableRow>
+
+            <TableRow className="bg-gray-50">
+              <TableCell className="pl-8 text-gray-700">Emily Martinez</TableCell>
+              <TableCell>
+                <div className="flex items-center gap-1 text-orange-600">
+                  <div className="w-3 h-3 rounded-full bg-orange-500" />
+                  <span className="text-sm">Late</span>
+                </div>
+              </TableCell>
+              <TableCell>8</TableCell>
+              <TableCell>
+                <span className="text-orange-600 font-medium">83%</span>
+              </TableCell>
+              <TableCell>30.1%</TableCell>
+              <TableCell>26</TableCell>
+            </TableRow>
+          </>
+        )}
+      </TableBody>
+    </Table>
+  </CardContent>
+</Card>
 
         {/* Campaigns */}
         <Card>
@@ -550,206 +1274,402 @@ export default function MillenniumDashboard() {
           <CardContent>
             {activeCampaignTab === "overview" ? (
               <>
-                <div className="grid grid-cols-4 gap-6 mb-6">
+                {/* KPI Cards */}
+                <div className="grid grid-cols-4 gap-6 mb-8">
                   <div>
-                    <p className="text-sm text-gray-600 mb-1">LEADS</p>
-                    <p className="text-2xl font-bold">1,240</p>
-                    <Badge variant="secondary" className="text-xs">+5%</Badge>
+                    <div className="flex justify-between items-center mb-1">
+                      <p className="text-sm text-gray-600">BOOKINGS</p>
+                      <span className="text-xs text-[#5BB88A] font-medium">↑ 8%</span>
+                    </div>
+                    <p className="text-3xl font-bold">1,240</p>
+                    <div className="mt-2 h-8 flex items-end">
+                      <svg className="w-full h-6" viewBox="0 0 100 20">
+                        <polyline
+                          fill="none"
+                          stroke="#e5e7eb"
+                          strokeWidth="1"
+                          points="0,15 20,12 40,8 60,10 80,6 100,4"
+                        />
+                      </svg>
+                    </div>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600 mb-1">CONVERSION RATE</p>
-                    <p className="text-2xl font-bold">42%</p>
-                    <Badge variant="secondary" className="text-xs">+8%</Badge>
+                    <div className="flex justify-between items-center mb-1">
+                      <p className="text-sm text-gray-600">CONVERSION RATE</p>
+                      <span className="text-xs text-[#5BB88A] font-medium">↑ 3%</span>
+                    </div>
+                    <p className="text-3xl font-bold">42%</p>
+                    <div className="mt-2 h-8 flex items-end">
+                      <svg className="w-full h-6" viewBox="0 0 100 20">
+                        <polyline
+                          fill="none"
+                          stroke="#e5e7eb"
+                          strokeWidth="1"
+                          points="0,18 20,14 40,10 60,8 80,6 100,5"
+                        />
+                      </svg>
+                    </div>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600 mb-1">COST PER LEAD</p>
-                    <p className="text-2xl font-bold">3.2</p>
-                    <Badge variant="secondary" className="text-xs">-2%</Badge>
+                    <div className="flex justify-between items-center mb-1">
+                      <p className="text-sm text-gray-600">AVG TOUCHES TO BOOK</p>
+                      <span className="text-xs text-[#E85555] font-medium">↓ 5%</span>
+                    </div>
+                    <p className="text-3xl font-bold">3.2</p>
+                    <div className="mt-2 h-8 flex items-end">
+                      <svg className="w-full h-6" viewBox="0 0 100 20">
+                        <polyline
+                          fill="none"
+                          stroke="#e5e7eb"
+                          strokeWidth="1"
+                          points="0,8 20,12 40,15 60,13 80,16 100,18"
+                        />
+                      </svg>
+                    </div>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600 mb-1">CLICK-THROUGH RATE</p>
-                    <p className="text-2xl font-bold">4.1%</p>
-                    <Badge variant="secondary" className="text-xs">+1%</Badge>
+                    <div className="flex justify-between items-center mb-1">
+                      <p className="text-sm text-gray-600">COMPLAINT RATE</p>
+                      <span className="text-xs text-[#5BB88A] font-medium">↑ 2%</span>
+                    </div>
+                    <p className="text-3xl font-bold">4.1%</p>
+                    <div className="mt-2 h-8 flex items-end">
+                      <svg className="w-full h-6" viewBox="0 0 100 20">
+                        <polyline
+                          fill="none"
+                          stroke="#e5e7eb"
+                          strokeWidth="1"
+                          points="0,12 20,10 40,14 60,11 80,8 100,6"
+                        />
+                      </svg>
+                    </div>
                   </div>
                 </div>
 
-                <div className="space-y-4">
+                {/* Channel Mix */}
+                <div className="space-y-4 mb-8">
                   <h4 className="font-medium">Channel Mix</h4>
-                  <div className="w-full bg-gray-200 rounded-lg h-8 flex overflow-hidden">
-                    <div className="bg-blue-500 flex-1 flex items-center justify-center text-white text-sm">
-                      Email
+                  <div className="w-full bg-gray-200 rounded-lg h-12 flex overflow-hidden">
+                    <div className="bg-blue-500 flex items-center justify-center text-white text-sm font-medium" style={{ width: '38%' }}>
+                      Email 38%
                     </div>
-                    <div className="bg-green-500 flex-1 flex items-center justify-center text-white text-sm">
-                      Direct Mail
+                    <div className="bg-blue-400 flex items-center justify-center text-white text-sm font-medium" style={{ width: '26%' }}>
+                      Direct-Mail 26%
                     </div>
-                    <div className="bg-gray-400 flex-1 flex items-center justify-center text-white text-sm">
-                      Ads
+                    <div className="bg-blue-300 flex items-center justify-center text-white text-sm font-medium" style={{ width: '22%' }}>
+                      Ads 22%
                     </div>
-                    <div className="bg-red-400 flex-1 flex items-center justify-center text-white text-sm">
-                      Provider Outreach
+                    <div className="bg-blue-200 flex items-center justify-center text-gray-700 text-sm font-medium" style={{ width: '14%' }}>
+                      Provider 14%
                     </div>
                   </div>
                 </div>
 
-                <div className="mt-6">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>CHANNEL</TableHead>
-                        <TableHead>BOOKINGS</TableHead>
-                        <TableHead>CONVERSION RATE %</TableHead>
-                        <TableHead>COST/LEAD $</TableHead>
-                        <TableHead>AVG TOUCHPOINTS/LEAD</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      <TableRow>
-                        <TableCell>Email</TableCell>
-                        <TableCell>471</TableCell>
-                        <TableCell>38%</TableCell>
-                        <TableCell>2.2</TableCell>
-                        <TableCell>4.8</TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell>Direct Mail</TableCell>
-                        <TableCell>322</TableCell>
-                        <TableCell>45%</TableCell>
-                        <TableCell>3.1</TableCell>
-                        <TableCell>3.4</TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell>Ads</TableCell>
-                        <TableCell>278</TableCell>
-                        <TableCell>41%</TableCell>
-                        <TableCell>4.8</TableCell>
-                        <TableCell>6.2</TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell>Provider Outreach</TableCell>
-                        <TableCell>174</TableCell>
-                        <TableCell>52%</TableCell>
-                        <TableCell>1.4</TableCell>
-                        <TableCell>2.1</TableCell>
-                      </TableRow>
-                    </TableBody>
-                  </Table>
-                </div>
+                {/* Channel Performance Table */}
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>CHANNEL</TableHead>
+                      <TableHead>BOOKINGS</TableHead>
+                      <TableHead>CONVERSION RATE %</TableHead>
+                      <TableHead>COMPLAINT %</TableHead>
+                      <TableHead>AVG TOUCHES/LEAD</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    <TableRow>
+                      <TableCell className="font-medium">Email</TableCell>
+                      <TableCell>471</TableCell>
+                      <TableCell>44%</TableCell>
+                      <TableCell>3.2%</TableCell>
+                      <TableCell>2.8</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="font-medium">Direct-Mail</TableCell>
+                      <TableCell>322</TableCell>
+                      <TableCell>38%</TableCell>
+                      <TableCell>2.1%</TableCell>
+                      <TableCell>3.4</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="font-medium">Ads</TableCell>
+                      <TableCell>273</TableCell>
+                      <TableCell>41%</TableCell>
+                      <TableCell>6.8%</TableCell>
+                      <TableCell className="text-[#E85555] font-medium">4.2</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="font-medium">Provider Outreach</TableCell>
+                      <TableCell>174</TableCell>
+                      <TableCell>46%</TableCell>
+                      <TableCell>1.4%</TableCell>
+                      <TableCell className="text-[#E85555] font-medium">5.1</TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
               </>
             ) : (
-              <div className="space-y-6">
-                <div className="grid grid-cols-4 gap-6">
+              <>
+                {/* KPI Cards - Same as Overview */}
+                <div className="grid grid-cols-4 gap-6 mb-8">
                   <div>
-                    <p className="text-sm text-gray-600 mb-1">LEADS</p>
-                    <p className="text-2xl font-bold">1,240</p>
-                    <Badge variant="secondary" className="text-xs">+5%</Badge>
+                    <div className="flex justify-between items-center mb-1">
+                      <p className="text-sm text-gray-600">BOOKINGS</p>
+                      <span className="text-xs text-[#5BB88A] font-medium">↑ 8%</span>
+                    </div>
+                    <p className="text-3xl font-bold">1,240</p>
+                    <div className="mt-2 h-8 flex items-end">
+                      <svg className="w-full h-6" viewBox="0 0 100 20">
+                        <polyline
+                          fill="none"
+                          stroke="#e5e7eb"
+                          strokeWidth="1"
+                          points="0,15 20,12 40,8 60,10 80,6 100,4"
+                        />
+                      </svg>
+                    </div>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600 mb-1">CONVERSION RATE</p>
-                    <p className="text-2xl font-bold">42%</p>
-                    <Badge variant="secondary" className="text-xs">+8%</Badge>
+                    <div className="flex justify-between items-center mb-1">
+                      <p className="text-sm text-gray-600">CONVERSION RATE</p>
+                      <span className="text-xs text-[#5BB88A] font-medium">↑ 3%</span>
+                    </div>
+                    <p className="text-3xl font-bold">42%</p>
+                    <div className="mt-2 h-8 flex items-end">
+                      <svg className="w-full h-6" viewBox="0 0 100 20">
+                        <polyline
+                          fill="none"
+                          stroke="#e5e7eb"
+                          strokeWidth="1"
+                          points="0,18 20,14 40,10 60,8 80,6 100,5"
+                        />
+                      </svg>
+                    </div>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600 mb-1">COST PER LEAD</p>
-                    <p className="text-2xl font-bold">3.2</p>
-                    <Badge variant="secondary" className="text-xs">-2%</Badge>
+                    <div className="flex justify-between items-center mb-1">
+                      <p className="text-sm text-gray-600">AVG TOUCHES TO BOOK</p>
+                      <span className="text-xs text-[#E85555] font-medium">↓ 5%</span>
+                    </div>
+                    <p className="text-3xl font-bold">3.2</p>
+                    <div className="mt-2 h-8 flex items-end">
+                      <svg className="w-full h-6" viewBox="0 0 100 20">
+                        <polyline
+                          fill="none"
+                          stroke="#e5e7eb"
+                          strokeWidth="1"
+                          points="0,8 20,12 40,15 60,13 80,16 100,18"
+                        />
+                      </svg>
+                    </div>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600 mb-1">CLICK-THROUGH RATE</p>
-                    <p className="text-2xl font-bold">4.1%</p>
-                    <Badge variant="secondary" className="text-xs">+1%</Badge>
+                    <div className="flex justify-between items-center mb-1">
+                      <p className="text-sm text-gray-600">COMPLAINT RATE</p>
+                      <span className="text-xs text-[#5BB88A] font-medium">↑ 2%</span>
+                    </div>
+                    <p className="text-3xl font-bold">4.1%</p>
+                    <div className="mt-2 h-8 flex items-end">
+                      <svg className="w-full h-6" viewBox="0 0 100 20">
+                        <polyline
+                          fill="none"
+                          stroke="#e5e7eb"
+                          strokeWidth="1"
+                          points="0,12 20,10 40,14 60,11 80,8 100,6"
+                        />
+                      </svg>
+                    </div>
                   </div>
                 </div>
 
-                <div>
-                  <h4 className="font-medium mb-4">Touch Frequency Distribution</h4>
+                {/* Touch Frequency Distribution */}
+                <div className="space-y-4 mb-8">
+                  <h4 className="font-medium">Touch Frequency Distribution</h4>
                   <div className="w-full bg-gray-200 rounded-lg h-8 flex overflow-hidden">
-                    <div className="bg-green-500 h-full" style={{ width: '40%' }} />
-                    <div className="bg-blue-500 h-full" style={{ width: '30%' }} />
-                    <div className="bg-gray-400 h-full" style={{ width: '20%' }} />
-                    <div className="bg-red-400 h-full" style={{ width: '10%' }} />
+                    <div className="bg-[#8DD9B8] flex items-center justify-center text-white text-sm font-medium" style={{ width: '20%' }}>
+                      1 Touch 20%
+                    </div>
+                    <div className="bg-[#8DD9B8] flex items-center justify-center text-white text-sm font-medium" style={{ width: '25%' }}>
+                      2 Touch 25%
+                    </div>
+                    <div className="bg-gray-500 flex items-center justify-center text-white text-sm font-medium" style={{ width: '22%' }}>
+                      3 Touch 22%
+                    </div>
+                    <div className="bg-gray-500 flex items-center justify-center text-white text-sm font-medium" style={{ width: '15%' }}>
+                      4 Touch 15%
+                    </div>
+                    <div className="bg-[#FA9999] flex items-center justify-center text-white text-sm font-medium" style={{ width: '9%' }}>
+                      5 Touch 9%
+                    </div>
+                    <div className="bg-[#FA9999] flex items-center justify-center text-white text-sm font-medium" style={{ width: '6%' }}>
+                      6 Touch 6%
+                    </div>
+                    <div className="bg-[#F87171] flex items-center justify-center text-white text-sm font-medium" style={{ width: '3%' }}>
+                      7+ 3%
+                    </div>
                   </div>
-                  <div className="flex justify-between text-xs text-gray-600 mt-2">
-                    <span>1 Touch</span>
-                    <span>2-3 Touches</span>
-                    <span>4-6 Touches</span>
-                    <span>7+ Touches</span>
+                  <div className="flex gap-4 text-xs">
+                    <div className="flex items-center gap-1">
+                      <div className="w-2 h-2 bg-[#8DD9B8] rounded-full" />
+                      <span>Booked</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <div className="w-2 h-2 bg-gray-500 rounded-full" />
+                      <span>Still Open</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <div className="w-2 h-2 bg-[#FA9999] rounded-full" />
+                      <span>Complaint</span>
+                    </div>
                   </div>
                 </div>
 
+                {/* Touchpoint Heatmap */}
+                <div className="space-y-4 mb-8">
+                  <h4 className="font-medium">Touchpoint Heatmap</h4>
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr>
+                          <th className="text-left text-sm font-medium text-gray-600 p-2">Campaign Type</th>
+                          <th className="text-center text-sm font-medium text-gray-600 p-2">Touch 1</th>
+                          <th className="text-center text-sm font-medium text-gray-600 p-2">Touch 2</th>
+                          <th className="text-center text-sm font-medium text-gray-600 p-2">Touch 3</th>
+                          <th className="text-center text-sm font-medium text-gray-600 p-2">Touch 4</th>
+                          <th className="text-center text-sm font-medium text-gray-600 p-2">Touch 5</th>
+                          <th className="text-center text-sm font-medium text-gray-600 p-2">Touch 6</th>
+                          <th className="text-center text-sm font-medium text-gray-600 p-2">Touch 7</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td className="text-sm font-medium p-2">Email</td>
+                          <td className="text-center text-sm p-2 bg-blue-300 text-white">28%</td>
+                          <td className="text-center text-sm p-2 bg-blue-400 text-white">35%</td>
+                          <td className="text-center text-sm p-2 bg-blue-300 text-white">22%</td>
+                          <td className="text-center text-sm p-2 bg-blue-200 text-gray-700">18%</td>
+                          <td className="text-center text-sm p-2 bg-[#FA9999] text-white">12%</td>
+                          <td className="text-center text-sm p-2 bg-[#FA9999] text-white">8%</td>
+                          <td className="text-center text-sm p-2 bg-[#FA9999] text-white">5%</td>
+                        </tr>
+                        <tr>
+                          <td className="text-sm font-medium p-2">Direct-Mail</td>
+                          <td className="text-center text-sm p-2 bg-blue-400 text-white">32%</td>
+                          <td className="text-center text-sm p-2 bg-blue-300 text-white">28%</td>
+                          <td className="text-center text-sm p-2 bg-blue-300 text-white">24%</td>
+                          <td className="text-center text-sm p-2 bg-blue-200 text-gray-700">19%</td>
+                          <td className="text-center text-sm p-2 bg-blue-200 text-gray-700">14%</td>
+                          <td className="text-center text-sm p-2 bg-blue-100 text-gray-700">9%</td>
+                          <td className="text-center text-sm p-2 bg-blue-100 text-gray-700">6%</td>
+                        </tr>
+                        <tr>
+                          <td className="text-sm font-medium p-2">Ads</td>
+                          <td className="text-center text-sm p-2 bg-blue-500 text-white">40%</td>
+                          <td className="text-center text-sm p-2 bg-blue-300 text-white">26%</td>
+                          <td className="text-center text-sm p-2 bg-blue-200 text-gray-700">18%</td>
+                          <td className="text-center text-sm p-2 bg-[#FEE5E5] text-gray-700">15%</td>
+                          <td className="text-center text-sm p-2 bg-[#FA9999] text-white">11%</td>
+                          <td className="text-center text-sm p-2 bg-[#FA9999] text-white">7%</td>
+                          <td className="text-center text-sm p-2 bg-[#FA9999] text-white">4%</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <p className="text-xs text-gray-600">Darker = higher response • Red cells flag high complaint %</p>
+                </div>
+
+                {/* Campaign Performance Table */}
                 <div>
                   <h4 className="font-medium mb-4">Campaign Performance</h4>
                   <Table>
                     <TableHeader>
                       <TableRow>
                         <TableHead>CAMPAIGN NAME</TableHead>
-                        <TableHead>MEDIUM/CHANNEL</TableHead>
-                        <TableHead>IMPRESSIONS</TableHead>
+                        <TableHead>TYPE</TableHead>
+                        <TableHead>TARGET SEGMENT</TableHead>
+                        <TableHead>AVG TOUCHES/LEAD</TableHead>
                         <TableHead>BOOKINGS</TableHead>
-                        <TableHead>CONVERSION RATE %</TableHead>
-                        <TableHead>COST/LEAD $</TableHead>
+                        <TableHead>CONVERSION RATE % ↓</TableHead>
+                        <TableHead>COMPLAINT %</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       <TableRow>
-                        <TableCell>ACA Open Enrollment</TableCell>
-                        <TableCell>Direct Mail</TableCell>
-                        <TableCell>25,847 impressions</TableCell>
-                        <TableCell>142</TableCell>
+                        <TableCell className="font-medium">Medicare Advantage Q4</TableCell>
+                        <TableCell>Email</TableCell>
+                        <TableCell>65+ High Income</TableCell>
+                        <TableCell>2.8</TableCell>
+                        <TableCell>187</TableCell>
                         <TableCell>48%</TableCell>
-                        <TableCell>3.2%</TableCell>
+                        <TableCell>2.1%</TableCell>
                       </TableRow>
                       <TableRow>
-                        <TableCell>Life Insurance Leads</TableCell>
-                        <TableCell>Ads</TableCell>
-                        <TableCell>18,492 impressions</TableCell>
-                        <TableCell>89</TableCell>
-                        <TableCell>42%</TableCell>
-                        <TableCell>4.1%</TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell>Provider Referral Program</TableCell>
-                        <TableCell>Provider Outreach</TableCell>
-                        <TableCell>8,234 impressions</TableCell>
+                        <TableCell className="font-medium">ACA Open Enrollment</TableCell>
+                        <TableCell>Direct-Mail</TableCell>
+                        <TableCell>35-54 Families</TableCell>
+                        <TableCell>3.2</TableCell>
                         <TableCell>156</TableCell>
-                        <TableCell>61%</TableCell>
+                        <TableCell>46%</TableCell>
                         <TableCell>1.8%</TableCell>
                       </TableRow>
                       <TableRow>
-                        <TableCell>Supplement Plans</TableCell>
-                        <TableCell>Email</TableCell>
-                        <TableCell>12,847 impressions</TableCell>
-                        <TableCell>73</TableCell>
-                        <TableCell>35%</TableCell>
-                        <TableCell>2.4%</TableCell>
+                        <TableCell className="font-medium">Life Insurance Leads</TableCell>
+                        <TableCell>Ads</TableCell>
+                        <TableCell>25-44 Parents</TableCell>
+                        <TableCell className="text-[#E85555] font-medium">4.5</TableCell>
+                        <TableCell>143</TableCell>
+                        <TableCell>44%</TableCell>
+                        <TableCell>7.2%</TableCell>
                       </TableRow>
                       <TableRow>
-                        <TableCell>Plans Term Matched</TableCell>
-                        <TableCell>Email</TableCell>
-                        <TableCell>9,847 impressions</TableCell>
-                        <TableCell>45</TableCell>
-                        <TableCell>28%</TableCell>
-                        <TableCell>3.1%</TableCell>
+                        <TableCell className="font-medium">Provider Referral Program</TableCell>
+                        <TableCell>Provider Outreach</TableCell>
+                        <TableCell>All Ages</TableCell>
+                        <TableCell className="text-[#E85555] font-medium">5.1</TableCell>
+                        <TableCell>98</TableCell>
+                        <TableCell>43%</TableCell>
+                        <TableCell>1.2%</TableCell>
                       </TableRow>
                       <TableRow>
-                        <TableCell>Dental & Vision</TableCell>
-                        <TableCell>Direct Mail</TableCell>
-                        <TableCell>6,234 impressions</TableCell>
-                        <TableCell>78</TableCell>
+                        <TableCell className="font-medium">Supplement Plans</TableCell>
+                        <TableCell>Email</TableCell>
+                        <TableCell>55-64 Pre-Medicare</TableCell>
+                        <TableCell>3.1</TableCell>
+                        <TableCell>124</TableCell>
+                        <TableCell>41%</TableCell>
+                        <TableCell>3.4%</TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell className="font-medium">Short-Term Medical</TableCell>
+                        <TableCell>Ads</TableCell>
+                        <TableCell>18-34 Gig Workers</TableCell>
+                        <TableCell>3.8</TableCell>
+                        <TableCell>89</TableCell>
                         <TableCell>39%</TableCell>
-                        <TableCell>2.7%</TableCell>
+                        <TableCell>5.8%</TableCell>
                       </TableRow>
                       <TableRow>
-                        <TableCell>ACA Pricing</TableCell>
+                        <TableCell className="font-medium">Dental & Vision</TableCell>
+                        <TableCell>Direct-Mail</TableCell>
+                        <TableCell>45-64 Families</TableCell>
+                        <TableCell>2.9</TableCell>
+                        <TableCell>76</TableCell>
+                        <TableCell>37%</TableCell>
+                        <TableCell>2.3%</TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell className="font-medium">Critical Illness</TableCell>
                         <TableCell>Email</TableCell>
-                        <TableCell>4,847 impressions</TableCell>
-                        <TableCell>34</TableCell>
-                        <TableCell>31%</TableCell>
-                        <TableCell>4.2%</TableCell>
+                        <TableCell>50+ High Risk</TableCell>
+                        <TableCell>3.6</TableCell>
+                        <TableCell>67</TableCell>
+                        <TableCell>35%</TableCell>
+                        <TableCell>4.1%</TableCell>
                       </TableRow>
                     </TableBody>
                   </Table>
                 </div>
-              </div>
+              </>
             )}
           </CardContent>
         </Card>
