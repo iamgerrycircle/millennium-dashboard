@@ -30,7 +30,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
 export default function MillenniumDashboard() {
-  const [activeLeadTab, setActiveLeadTab] = useState("intent")
+  const [activeLeadTab, setActiveLeadTab] = useState("demographics")
   const [activeCampaignTab, setActiveCampaignTab] = useState("overview")
   const [showAdditionalFilters, setShowAdditionalFilters] = useState(false)
   const [expandedAgencies, setExpandedAgencies] = useState<string[]>(["Premier Insurance Group", "Elite Coverage Solutions"])
@@ -63,14 +63,14 @@ export default function MillenniumDashboard() {
   const topMetrics = [
     { label: "BOOKED APPOINTMENTS", value: "247", trend: "up", color: "#74D1A6", percentage: "+12%" },
     { label: "AWAITING ACCEPTANCE", value: "58", trend: "down", color: "#F87171", percentage: "-15%" },
-    { label: "ACCEPTED APPOINTMENTS", value: "189", trend: "up", color: "#74D1A6", percentage: "+8%" },
+    { label: "ACCEPTED APPOINTMENTS", value: "634", trend: "up", color: "#74D1A6", percentage: "+8%" },
   ]
 
   const bottomMetrics = [
-    { label: "IN PROGRESS", value: "634", trend: "down", color: "#F87171", percentage: "-3%" },
-    { label: "CLOSED WON", value: "287", trend: "down", color: "#F87171", percentage: "-3%" },
-    { label: "CLOSED LOST", value: "287", trend: "down", color: "#F87171", percentage: "-3%" },
-    { label: "INACTIVE/ARCHIVED", value: "287", trend: "down", color: "#F87171", percentage: "-3%" },
+    { label: "IN PROGRESS", value: "634", trend: "up", color: "#74D1A6", percentage: "+5%" },
+    { label: "CLOSED WON", value: "342", trend: "up", color: "#74D1A6", percentage: "+7%" },
+    { label: "CLOSED LOST", value: "156", trend: "down", color: "#F87171", percentage: "-8%" },
+    { label: "INACTIVE/ARCHIVED", value: "89", trend: "up", color: "#74D1A6", percentage: "+2%" },
   ]
 
   const overviewSegments = [
@@ -201,6 +201,10 @@ export default function MillenniumDashboard() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all-agencies">All Agencies</SelectItem>
+                <SelectItem value="premier-insurance-group">Premier Insurance Group</SelectItem>
+                <SelectItem value="elite-coverage-solutions">Elite Coverage Solutions</SelectItem>
+                <SelectItem value="secure-benefits-network">Secure Benefits Network</SelectItem>
+                <SelectItem value="guardian-health-partners">Guardian Health Partners</SelectItem>
                 <SelectItem value="active-only">Active Only</SelectItem>
                 <SelectItem value="paused-only">Paused Only</SelectItem>
               </SelectContent>
@@ -516,11 +520,11 @@ export default function MillenniumDashboard() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-sm font-medium text-gray-600">{metric.label}</p>
-                  <div className="w-3 h-3 rounded-full bg-[#F87171]" />
+                  <div className={`w-3 h-3 rounded-full ${metric.color === '#74D1A6' ? 'bg-[#74D1A6]' : 'bg-[#F87171]'}`} />
                 </div>
                 <div className="flex items-end justify-between">
                   <p className="text-3xl font-bold">{metric.value}</p>
-                  <div className="text-sm font-medium text-[#E85555]">
+                  <div className={`text-sm font-medium ${metric.color === '#74D1A6' ? 'text-[#5BB88A]' : 'text-[#E85555]'}`}>
                     {metric.percentage}
                   </div>
                 </div>
@@ -536,83 +540,80 @@ export default function MillenniumDashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
-              {/* Vertical Funnel Bars */}
-              <div className="flex items-end justify-center gap-8 h-80">
+              {/* Horizontal Funnel Bar */}
+              <div className="w-full h-16 flex rounded-lg overflow-hidden">
                 {/* Booked */}
-                <div className="flex flex-col items-center">
-                  <div
-                    className="bg-blue-600 text-white font-semibold flex flex-col items-center justify-end px-6 py-4 rounded-t-lg relative"
-                    style={{ height: '240px', width: '120px' }}
-                  >
-                    <span className="text-lg font-bold mb-2">1,200</span>
-                  </div>
-                  <div className="text-sm font-medium text-gray-700 mt-2 text-center">
-                    Booked
-                  </div>
+                <div 
+                  className="bg-blue-600 flex flex-col items-center justify-center text-white font-semibold relative"
+                  style={{ width: '42.5%' }}
+                >
+                  <span className="text-lg font-bold">1,200</span>
+                  <span className="text-sm">Booked</span>
                 </div>
-
+                
                 {/* Assigned */}
-                <div className="flex flex-col items-center">
-                  <div
-                    className="bg-blue-400 text-white font-semibold flex flex-col items-center justify-end px-6 py-4 rounded-t-lg"
-                    style={{ height: '210px', width: '120px' }}
-                  >
-                    <span className="text-lg font-bold mb-2">1,050</span>
-                  </div>
-                  <div className="text-sm font-medium text-gray-700 mt-2 text-center">
-                    Assigned
-                  </div>
+                <div 
+                  className="bg-blue-400 flex flex-col items-center justify-center text-white font-semibold"
+                  style={{ width: '37.2%' }}
+                >
+                  <span className="text-lg font-bold">1,050</span>
+                  <span className="text-sm">Assigned</span>
                 </div>
-
+                
                 {/* Accepted */}
-                <div className="flex flex-col items-center">
-                  <div
-                    className="bg-gray-500 text-white font-semibold flex flex-col items-center justify-end px-6 py-4 rounded-t-lg"
-                    style={{ height: '156px', width: '120px' }}
-                  >
-                    <span className="text-lg font-bold mb-2">780</span>
-                  </div>
-                  <div className="text-sm font-medium text-gray-700 mt-2 text-center">
-                    Accepted
-                  </div>
+                <div 
+                  className="bg-gray-500 flex flex-col items-center justify-center text-white font-semibold"
+                  style={{ width: '27.6%' }}
+                >
+                  <span className="text-lg font-bold">780</span>
+                  <span className="text-sm">Accepted</span>
                 </div>
-
+                
                 {/* Sold */}
-                <div className="flex flex-col items-center">
-                  <div
-                    className="bg-[#74D1A6] text-white font-semibold flex flex-col items-center justify-end px-6 py-4 rounded-t-lg"
-                    style={{ height: '102px', width: '120px' }}
-                  >
-                    <span className="text-lg font-bold mb-2">510</span>
-                  </div>
-                  <div className="text-sm font-medium text-gray-700 mt-2 text-center">
-                    Sold
-                  </div>
+                <div 
+                  className="bg-[#74D1A6] flex flex-col items-center justify-center text-white font-semibold"
+                  style={{ width: '18.1%' }}
+                >
+                  <span className="text-lg font-bold">510</span>
+                  <span className="text-sm">Sold</span>
                 </div>
               </div>
 
-              {/* Attrition Details */}
-              <div className="space-y-3 bg-[#FEF5F5] border-[#FBBFBF] rounded-lg p-4">
-                <h4 className="font-medium text-[#B91C1C] mb-3">Conversion Losses</h4>
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-center gap-2">
-                    <Badge variant="destructive" className="text-xs">▼</Badge>
-                    <span className="text-[#DC4444]">12.5% attrition from Booked to Assigned</span>
+              {/* Attrition Tags - Positioned at left edge of corresponding bars */}
+              <div className="relative">
+                <div className="flex mt-4">
+                  {/* Booked to Assigned transition - align to left edge of Assigned bar */}
+                  <div className="flex flex-col items-start" style={{ width: '42.5%' }}>
+                    {/* Empty space for Booked bar */}
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="destructive" className="text-xs">▼</Badge>
-                    <span className="text-[#DC4444]">25.7% attrition from Assigned to Accepted</span>
+                  <div className="flex flex-col items-start" style={{ width: '37.2%' }}>
+                    <Badge variant="destructive" className="bg-[#F87171] text-white text-xs px-3 py-1 mb-1">
+                      ▼ -12.5%
+                    </Badge>
+                    <span className="text-xs text-gray-600">Booked to Assigned</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="destructive" className="text-xs">▼</Badge>
-                    <span className="text-[#DC4444]">34.6% attrition from Accepted to Sold</span>
+                  
+                  {/* Assigned to Accepted transition - align to left edge of Accepted bar */}
+                  <div className="flex flex-col items-start" style={{ width: '27.6%' }}>
+                    <Badge variant="destructive" className="bg-[#F87171] text-white text-xs px-3 py-1 mb-1">
+                      ▼ -25.7%
+                    </Badge>
+                    <span className="text-xs text-gray-600">Assigned to Accepted</span>
+                  </div>
+                  
+                  {/* Accepted to Sold transition - align to left edge of Sold bar */}
+                  <div className="flex flex-col items-start" style={{ width: '18.1%' }}>
+                    <Badge variant="destructive" className="bg-[#F87171] text-white text-xs px-3 py-1 mb-1">
+                      ▼ -34.6%
+                    </Badge>
+                    <span className="text-xs text-gray-600">Accepted to Sold</span>
                   </div>
                 </div>
               </div>
 
               {/* Footer Note */}
-              <div className="text-sm text-gray-600 border-t pt-4">
-                <p>Bar heights proportional to volume • Red indicators show conversion losses between stages</p>
+              <div className="text-sm text-gray-600 border-t pt-4 text-center">
+                <p>Bar lengths proportional to volume • Red chips = loss vs prior stage</p>
               </div>
             </div>
           </CardContent>
@@ -717,42 +718,44 @@ export default function MillenniumDashboard() {
                   </div>
 
                   <div>
-                    <h4 className="font-medium mb-3">Top 5 Counties by Lead Count</h4>
-                    <div className="space-y-4">
-                      <div className="flex justify-between items-center">
-                        <div className="flex items-center gap-3">
-                          <span className="font-bold text-lg">#1</span>
-                          <span className="font-medium">Sarasota</span>
+                    <div>
+                      <h4 className="font-medium mb-3">Top 5 Counties by Lead Count</h4>
+                      <div className="space-y-4">
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center gap-3">
+                            <span className="font-bold text-lg">#1</span>
+                            <span className="font-medium">Miami-Dade</span>
+                          </div>
+                          <span className="text-sm text-gray-600">156 leads (12.5%)</span>
                         </div>
-                        <span className="text-sm text-gray-600">156 leads (12.5%)</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <div className="flex items-center gap-3">
-                          <span className="font-bold text-lg">#2</span>
-                          <span className="font-medium">Miami</span>
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center gap-3">
+                            <span className="font-bold text-lg">#2</span>
+                            <span className="font-medium">Broward</span>
+                          </div>
+                          <span className="text-sm text-gray-600">134 leads (10.7%)</span>
                         </div>
-                        <span className="text-sm text-gray-600">134 leads (10.7%)</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <div className="flex items-center gap-3">
-                          <span className="font-bold text-lg">#3</span>
-                          <span className="font-medium">FL</span>
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center gap-3">
+                            <span className="font-bold text-lg">#3</span>
+                            <span className="font-medium">Palm Beach</span>
+                          </div>
+                          <span className="text-sm text-gray-600">98 leads (7.9%)</span>
                         </div>
-                        <span className="text-sm text-gray-600">98 leads (7.9%)</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <div className="flex items-center gap-3">
-                          <span className="font-bold text-lg">#4</span>
-                          <span className="font-medium">NY</span>
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center gap-3">
+                            <span className="font-bold text-lg">#4</span>
+                            <span className="font-medium">Hillsborough</span>
+                          </div>
+                          <span className="text-sm text-gray-600">87 leads (7%)</span>
                         </div>
-                        <span className="text-sm text-gray-600">87 leads (7%)</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <div className="flex items-center gap-3">
-                          <span className="font-bold text-lg">#5</span>
-                          <span className="font-medium">PA</span>
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center gap-3">
+                            <span className="font-bold text-lg">#5</span>
+                            <span className="font-medium">Orange</span>
+                          </div>
+                          <span className="text-sm text-gray-600">76 leads (6.1%)</span>
                         </div>
-                        <span className="text-sm text-gray-600">76 leads (6.1%)</span>
                       </div>
                     </div>
                   </div>
@@ -1276,7 +1279,7 @@ export default function MillenniumDashboard() {
               <>
                 {/* KPI Cards */}
                 <div className="grid grid-cols-4 gap-6 mb-8">
-                  <div>
+                  <div className="p-4 bg-white rounded-lg border border-gray-200">
                     <div className="flex justify-between items-center mb-1">
                       <p className="text-sm text-gray-600">BOOKINGS</p>
                       <span className="text-xs text-[#5BB88A] font-medium">↑ 8%</span>
@@ -1293,7 +1296,7 @@ export default function MillenniumDashboard() {
                       </svg>
                     </div>
                   </div>
-                  <div>
+                  <div className="p-4 bg-white rounded-lg border border-gray-200">
                     <div className="flex justify-between items-center mb-1">
                       <p className="text-sm text-gray-600">CONVERSION RATE</p>
                       <span className="text-xs text-[#5BB88A] font-medium">↑ 3%</span>
@@ -1310,7 +1313,7 @@ export default function MillenniumDashboard() {
                       </svg>
                     </div>
                   </div>
-                  <div>
+                  <div className="p-4 bg-white rounded-lg border border-gray-200">
                     <div className="flex justify-between items-center mb-1">
                       <p className="text-sm text-gray-600">AVG TOUCHES TO BOOK</p>
                       <span className="text-xs text-[#E85555] font-medium">↓ 5%</span>
@@ -1327,7 +1330,7 @@ export default function MillenniumDashboard() {
                       </svg>
                     </div>
                   </div>
-                  <div>
+                  <div className="p-4 bg-white rounded-lg border border-gray-200">
                     <div className="flex justify-between items-center mb-1">
                       <p className="text-sm text-gray-600">COMPLAINT RATE</p>
                       <span className="text-xs text-[#5BB88A] font-medium">↑ 2%</span>
@@ -1412,7 +1415,7 @@ export default function MillenniumDashboard() {
               <>
                 {/* KPI Cards - Same as Overview */}
                 <div className="grid grid-cols-4 gap-6 mb-8">
-                  <div>
+                  <div className="p-4 bg-white rounded-lg border border-gray-200">
                     <div className="flex justify-between items-center mb-1">
                       <p className="text-sm text-gray-600">BOOKINGS</p>
                       <span className="text-xs text-[#5BB88A] font-medium">↑ 8%</span>
@@ -1429,7 +1432,7 @@ export default function MillenniumDashboard() {
                       </svg>
                     </div>
                   </div>
-                  <div>
+                  <div className="p-4 bg-white rounded-lg border border-gray-200">
                     <div className="flex justify-between items-center mb-1">
                       <p className="text-sm text-gray-600">CONVERSION RATE</p>
                       <span className="text-xs text-[#5BB88A] font-medium">↑ 3%</span>
@@ -1446,7 +1449,7 @@ export default function MillenniumDashboard() {
                       </svg>
                     </div>
                   </div>
-                  <div>
+                  <div className="p-4 bg-white rounded-lg border border-gray-200">
                     <div className="flex justify-between items-center mb-1">
                       <p className="text-sm text-gray-600">AVG TOUCHES TO BOOK</p>
                       <span className="text-xs text-[#E85555] font-medium">↓ 5%</span>
@@ -1463,7 +1466,7 @@ export default function MillenniumDashboard() {
                       </svg>
                     </div>
                   </div>
-                  <div>
+                  <div className="p-4 bg-white rounded-lg border border-gray-200">
                     <div className="flex justify-between items-center mb-1">
                       <p className="text-sm text-gray-600">COMPLAINT RATE</p>
                       <span className="text-xs text-[#5BB88A] font-medium">↑ 2%</span>
@@ -1486,97 +1489,97 @@ export default function MillenniumDashboard() {
                 <div className="space-y-4 mb-8">
                   <h4 className="font-medium">Touch Frequency Distribution</h4>
                   <div className="w-full bg-gray-200 rounded-lg h-8 flex overflow-hidden">
-                    <div className="bg-[#8DD9B8] flex items-center justify-center text-white text-sm font-medium" style={{ width: '20%' }}>
+                    <div className="bg-emerald-400 flex items-center justify-center text-white text-xs font-medium" style={{ width: '20%' }}>
                       1 Touch 20%
                     </div>
-                    <div className="bg-[#8DD9B8] flex items-center justify-center text-white text-sm font-medium" style={{ width: '25%' }}>
+                    <div className="bg-emerald-500 flex items-center justify-center text-white text-xs font-medium" style={{ width: '25%' }}>
                       2 Touch 25%
                     </div>
-                    <div className="bg-gray-500 flex items-center justify-center text-white text-sm font-medium" style={{ width: '22%' }}>
-                      3 Touch 22%
-                    </div>
-                    <div className="bg-gray-500 flex items-center justify-center text-white text-sm font-medium" style={{ width: '15%' }}>
-                      4 Touch 15%
-                    </div>
-                    <div className="bg-[#FA9999] flex items-center justify-center text-white text-sm font-medium" style={{ width: '9%' }}>
-                      5 Touch 9%
-                    </div>
-                    <div className="bg-[#FA9999] flex items-center justify-center text-white text-sm font-medium" style={{ width: '6%' }}>
-                      6 Touch 6%
-                    </div>
-                    <div className="bg-[#F87171] flex items-center justify-center text-white text-sm font-medium" style={{ width: '3%' }}>
-                      7+ 3%
-                    </div>
-                  </div>
-                  <div className="flex gap-4 text-xs">
-                    <div className="flex items-center gap-1">
-                      <div className="w-2 h-2 bg-[#8DD9B8] rounded-full" />
-                      <span>Booked</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <div className="w-2 h-2 bg-gray-500 rounded-full" />
-                      <span>Still Open</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <div className="w-2 h-2 bg-[#FA9999] rounded-full" />
-                      <span>Complaint</span>
-                    </div>
-                  </div>
-                </div>
+                    <div className="bg-slate-500 flex items-center justify-center text-white text-xs font-medium" style={{ width: '22%' }}>
+      3 Touch 22%
+    </div>
+    <div className="bg-slate-600 flex items-center justify-center text-white text-xs font-medium" style={{ width: '15%' }}>
+      4 Touch 15%
+    </div>
+    <div className="bg-orange-400 flex items-center justify-center text-white text-xs font-medium" style={{ width: '9%' }}>
+      5 Touch 9%
+    </div>
+    <div className="bg-red-400 flex items-center justify-center text-white text-xs font-medium" style={{ width: '6%' }}>
+      6 Touch 6%
+    </div>
+    <div className="bg-red-600 flex items-center justify-center text-white text-xs font-medium" style={{ width: '3%' }}>
+      7+ 3%
+    </div>
+  </div>
+  <div className="flex gap-4 text-xs">
+    <div className="flex items-center gap-1">
+      <div className="w-2 h-2 bg-emerald-400 rounded-full" />
+      <span>Booked</span>
+    </div>
+    <div className="flex items-center gap-1">
+      <div className="w-2 h-2 bg-slate-500 rounded-full" />
+      <span>Still Open</span>
+    </div>
+    <div className="flex items-center gap-1">
+      <div className="w-2 h-2 bg-orange-400 rounded-full" />
+      <span>Complaint</span>
+    </div>
+  </div>
+</div>
 
                 {/* Touchpoint Heatmap */}
-                <div className="space-y-4 mb-8">
-                  <h4 className="font-medium">Touchpoint Heatmap</h4>
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead>
-                        <tr>
-                          <th className="text-left text-sm font-medium text-gray-600 p-2">Campaign Type</th>
-                          <th className="text-center text-sm font-medium text-gray-600 p-2">Touch 1</th>
-                          <th className="text-center text-sm font-medium text-gray-600 p-2">Touch 2</th>
-                          <th className="text-center text-sm font-medium text-gray-600 p-2">Touch 3</th>
-                          <th className="text-center text-sm font-medium text-gray-600 p-2">Touch 4</th>
-                          <th className="text-center text-sm font-medium text-gray-600 p-2">Touch 5</th>
-                          <th className="text-center text-sm font-medium text-gray-600 p-2">Touch 6</th>
-                          <th className="text-center text-sm font-medium text-gray-600 p-2">Touch 7</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr>
-                          <td className="text-sm font-medium p-2">Email</td>
-                          <td className="text-center text-sm p-2 bg-blue-300 text-white">28%</td>
-                          <td className="text-center text-sm p-2 bg-blue-400 text-white">35%</td>
-                          <td className="text-center text-sm p-2 bg-blue-300 text-white">22%</td>
-                          <td className="text-center text-sm p-2 bg-blue-200 text-gray-700">18%</td>
-                          <td className="text-center text-sm p-2 bg-[#FA9999] text-white">12%</td>
-                          <td className="text-center text-sm p-2 bg-[#FA9999] text-white">8%</td>
-                          <td className="text-center text-sm p-2 bg-[#FA9999] text-white">5%</td>
-                        </tr>
-                        <tr>
-                          <td className="text-sm font-medium p-2">Direct-Mail</td>
-                          <td className="text-center text-sm p-2 bg-blue-400 text-white">32%</td>
-                          <td className="text-center text-sm p-2 bg-blue-300 text-white">28%</td>
-                          <td className="text-center text-sm p-2 bg-blue-300 text-white">24%</td>
-                          <td className="text-center text-sm p-2 bg-blue-200 text-gray-700">19%</td>
-                          <td className="text-center text-sm p-2 bg-blue-200 text-gray-700">14%</td>
-                          <td className="text-center text-sm p-2 bg-blue-100 text-gray-700">9%</td>
-                          <td className="text-center text-sm p-2 bg-blue-100 text-gray-700">6%</td>
-                        </tr>
-                        <tr>
-                          <td className="text-sm font-medium p-2">Ads</td>
-                          <td className="text-center text-sm p-2 bg-blue-500 text-white">40%</td>
-                          <td className="text-center text-sm p-2 bg-blue-300 text-white">26%</td>
-                          <td className="text-center text-sm p-2 bg-blue-200 text-gray-700">18%</td>
-                          <td className="text-center text-sm p-2 bg-[#FEE5E5] text-gray-700">15%</td>
-                          <td className="text-center text-sm p-2 bg-[#FA9999] text-white">11%</td>
-                          <td className="text-center text-sm p-2 bg-[#FA9999] text-white">7%</td>
-                          <td className="text-center text-sm p-2 bg-[#FA9999] text-white">4%</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                  <p className="text-xs text-gray-600">Darker = higher response • Red cells flag high complaint %</p>
-                </div>
+<div className="space-y-4 mb-8">
+  <h4 className="font-medium">Touchpoint Heatmap</h4>
+  <div className="overflow-x-auto">
+    <table className="w-full min-w-[800px]">
+      <thead>
+        <tr>
+          <th className="text-left text-sm font-medium text-gray-600 p-3 min-w-[120px]">Campaign Type</th>
+          <th className="text-center text-sm font-medium text-gray-600 p-3 min-w-[80px]">Touch 1</th>
+          <th className="text-center text-sm font-medium text-gray-600 p-3 min-w-[80px]">Touch 2</th>
+          <th className="text-center text-sm font-medium text-gray-600 p-3 min-w-[80px]">Touch 3</th>
+          <th className="text-center text-sm font-medium text-gray-600 p-3 min-w-[80px]">Touch 4</th>
+          <th className="text-center text-sm font-medium text-gray-600 p-3 min-w-[80px]">Touch 5</th>
+          <th className="text-center text-sm font-medium text-gray-600 p-3 min-w-[80px]">Touch 6</th>
+          <th className="text-center text-sm font-medium text-gray-600 p-3 min-w-[80px]">Touch 7</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td className="text-sm font-medium p-3">Email</td>
+          <td className="text-center text-sm p-3 bg-blue-300 text-white">28%</td>
+          <td className="text-center text-sm p-3 bg-blue-400 text-white">35%</td>
+          <td className="text-center text-sm p-3 bg-blue-300 text-white">22%</td>
+          <td className="text-center text-sm p-3 bg-blue-200 text-gray-700">18%</td>
+          <td className="text-center text-sm p-3 bg-red-200 text-gray-700">12%</td>
+          <td className="text-center text-sm p-3 bg-red-400 text-white">8%</td>
+          <td className="text-center text-sm p-3 bg-red-500 text-white">5%</td>
+        </tr>
+        <tr>
+          <td className="text-sm font-medium p-3">Direct-Mail</td>
+          <td className="text-center text-sm p-3 bg-blue-400 text-white">32%</td>
+          <td className="text-center text-sm p-3 bg-blue-300 text-white">28%</td>
+          <td className="text-center text-sm p-3 bg-blue-300 text-white">24%</td>
+          <td className="text-center text-sm p-3 bg-blue-200 text-gray-700">19%</td>
+          <td className="text-center text-sm p-3 bg-blue-200 text-gray-700">14%</td>
+          <td className="text-center text-sm p-3 bg-blue-100 text-gray-700">9%</td>
+          <td className="text-center text-sm p-3 bg-blue-100 text-gray-700">6%</td>
+        </tr>
+        <tr>
+          <td className="text-sm font-medium p-3">Ads</td>
+          <td className="text-center text-sm p-3 bg-blue-500 text-white">40%</td>
+          <td className="text-center text-sm p-3 bg-blue-300 text-white">26%</td>
+          <td className="text-center text-sm p-3 bg-blue-200 text-gray-700">18%</td>
+          <td className="text-center text-sm p-3 bg-red-100 text-gray-700">15%</td>
+          <td className="text-center text-sm p-3 bg-red-300 text-white">11%</td>
+          <td className="text-center text-sm p-3 bg-red-400 text-white">7%</td>
+          <td className="text-center text-sm p-3 bg-red-500 text-white">4%</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p className="text-xs text-gray-600">Darker = higher response • Red cells flag high complaint %</p>
+</div>
 
                 {/* Campaign Performance Table */}
                 <div>
